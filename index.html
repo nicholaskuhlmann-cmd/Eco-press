@@ -9,14 +9,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Tu configuración de Firebase
+        // CONFIGURACIÓN REAL DE TU PROYECTO
         const firebaseConfig = {
-            apiKey: "AIzaSyB-v2v7zG-U7uE9uE9uE9uE9uE9uE9uE",
+            apiKey: "AIzaSyBqHLymGUt55cW9gKobefTs7i5Xy2VfkM8",
             authDomain: "eco-press-ucn.firebaseapp.com",
             projectId: "eco-press-ucn",
-            storageBucket: "eco-press-ucn.appspot.com",
-            messagingSenderId: "1056565191060",
-            appId: "1:1056565191060:web:964e6e6e6e6e6e6e6e6e6e"
+            storageBucket: "eco-press-ucn.firebasestorage.app",
+            messagingSenderId: "70507577726",
+            appId: "1:70507577726:web:05d05d5cc47cbbefc7732f",
+            measurementId: "G-W9XW7921G7"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -25,7 +26,6 @@
         window.registrarDatos = async () => {
             const rutInput = document.getElementById('rut').value;
             const status = document.getElementById('statusMessage');
-
             if (!rutInput) return;
 
             status.classList.remove('hidden');
@@ -36,14 +36,14 @@
                 await addDoc(collection(db, "reciclaje"), {
                     rut: rutInput,
                     fecha: serverTimestamp(),
-                    latas: 1 // Por ahora sumamos de a 1, luego lo vinculamos al sensor
+                    latas: 1 
                 });
-                status.textContent = "¡Éxito! Latas registradas correctamente.";
+                status.textContent = "¡Éxito! Latas registradas en Eco-Press.";
                 status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-green-100 text-green-700";
                 document.getElementById('rut').value = "";
             } catch (e) {
                 console.error("Error: ", e);
-                status.textContent = "Error al conectar. Revisa tu conexión.";
+                status.textContent = "Error de conexión. Verifica Firestore.";
                 status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-red-100 text-red-700";
             }
         };
@@ -53,10 +53,9 @@
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-green-600 uppercase tracking-wider">Eco-Press</h1>
-            <p class="text-gray-500 mt-2">Ingresa tu RUT para sumar puntos</p>
+            <p class="text-gray-500 mt-2">UCN - Proyecto de Reciclaje</p>
         </div>
-
-        <form id="ecoForm" onsubmit="event.preventDefault(); registrarDatos();" class="space-y-6">
+        <form onsubmit="event.preventDefault(); registrarDatos();" class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700">RUT del Usuario</label>
                 <input type="text" id="rut" placeholder="12.345.678-9" required
