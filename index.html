@@ -3,69 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eco-Press | Reciclaje Inteligente</title>
+    <title>Eco-Press | UCN</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #f3f4f6; }
-        .eco-green { color: #16a34a; }
-        .btn-eco { background-color: #16a34a; transition: 0.3s; }
-        .btn-eco:hover { background-color: #15803d; }
-    </style>
-</head>
-<body class="flex items-center justify-center min-h-screen p-4">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-v2v7zG-U7uE9uE9uE9uE9uE9uE9uE",
+            authDomain: "eco-press-ucn.firebaseapp.com",
+            projectId: "eco-press-ucn",
+            storageBucket: "eco-press-ucn.appspot.com",
+            messagingSenderId: "1056565191060",
+            appId: "1:1056565191060:web:964e6e6e6e6e6e6e6e6e6e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.registrarDatos = async () => {
+            const rutInput = document.getElementById('rut').value;
+            const status = document.getElementById('statusMessage');
+
+            if (!rutInput) return;
+
+            status.classList.remove('hidden');
+            status.textContent = "Registrando reciclaje...";
+            status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-blue-100 text-blue-700";
+
+            try {
+                await addDoc(collection(db, "reciclaje"), {
+                    rut: rutInput,
+                    fecha: serverTimestamp(),
+                    latas: 1 // Por ahora sumamos de a 1, luego lo vinculamos al sensor
+                });
+                status.textContent = "¡Éxito! Latas registradas correctamente.";
+                status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-green-100 text-green-700";
+                document.getElementById('rut').value = "";
+            } catch (e) {
+                console.error("Error: ", e);
+                status.textContent = "Error al conectar. Revisa tu conexión.";
+                status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-red-100 text-red-700";
+            }
+        };
+    </script>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
     <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold eco-green uppercase tracking-wider">Eco-Press</h1>
-            <p class="text-gray-500 mt-2">Ingresa tus datos para acumular puntos</p>
+            <h1 class="text-3xl font-bold text-green-600 uppercase tracking-wider">Eco-Press</h1>
+            <p class="text-gray-500 mt-2">Ingresa tu RUT para sumar puntos</p>
         </div>
 
-        <form id="ecoForm" class="space-y-6">
+        <form id="ecoForm" onsubmit="event.preventDefault(); registrarDatos();" class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700">RUT del Usuario</label>
-                <input type="text" id="rut" name="rut" placeholder="12.345.678-9" 
-                    class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 text-lg"
-                    required>
+                <input type="text" id="rut" placeholder="12.345.678-9" required
+                    class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 text-lg">
             </div>
-
-            <button type="submit" 
-                class="w-full btn-eco text-white font-bold py-3 rounded-lg shadow-lg uppercase tracking-wide">
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg uppercase transition">
                 Registrar Latas
             </button>
         </form>
-
         <div id="statusMessage" class="hidden mt-6 p-4 rounded-lg text-center font-medium"></div>
     </div>
-
-    <script>
-        // Función simple para formatear RUT mientras se escribe
-        document.getElementById('rut').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\./g, '').replace('-', '');
-            if (value.length > 1) {
-                value = value.slice(0, -1) + '-' + value.slice(-1);
-            }
-            if (value.length > 5) {
-                value = value.slice(0, -5) + '.' + value.slice(-5);
-            }
-            if (value.length > 9) {
-                value = value.slice(0, -9) + '.' + value.slice(-9);
-            }
-            e.target.value = value;
-        });
-
-        document.getElementById('ecoForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const rut = document.getElementById('rut').value;
-            const status = document.getElementById('statusMessage');
-            
-            // Simulación de carga
-            status.classList.remove('hidden');
-            status.textContent = "Conectando con Eco-Press...";
-            status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-yellow-100 text-yellow-700";
-
-            // Aquí irá la lógica de conexión con la base de datos
-            console.log("RUT registrado:", rut);
-        });
-    </script>
 </body>
 </html>
