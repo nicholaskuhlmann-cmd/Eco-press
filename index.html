@@ -7,17 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURACIÓN REAL DE TU PROYECTO
+        // Tu configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBqHLymGUt55cW9gKobefTs7i5Xy2VfkM8",
             authDomain: "eco-press-ucn.firebaseapp.com",
             projectId: "eco-press-ucn",
             storageBucket: "eco-press-ucn.firebasestorage.app",
             messagingSenderId: "70507577726",
-            appId: "1:70507577726:web:05d05d5cc47cbbefc7732f",
-            measurementId: "G-W9XW7921G7"
+            appId: "1:70507577726:web:05d05d5cc47cbbefc7732f"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -29,32 +28,56 @@
             if (!rutInput) return;
 
             status.classList.remove('hidden');
-            status.textContent = "Registrando reciclaje...";
+            status.textContent = "Consultando latas en la prensa...";
             status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-blue-100 text-blue-700";
 
             try {
-                await addDoc(collection(db, "reciclaje"), {
-                    rut: rutInput,
-                    fecha: serverTimestamp(),
-                    latas: 1 
-                });
-                status.textContent = "¡Éxito! Latas registradas en Eco-Press.";
-                status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-green-100 text-green-700";
-                document.getElementById('rut').value = "";
+                // 1. LEER CUÁNTAS LATAS HAY EN LA MÁQUINA (int64)
+                const machRef = doc(db, "maquinas", "prensa_01");
+                const machSnap = await getDoc(machRef);
+
+                if (machSnap.exists()) {
+                    const latasDetectadas = machSnap.data().latas_pendientes || 0;
+
+                    if (latasDetectadas === 0) {
+                        status.textContent = "No hay latas pendientes. ¡Aplastalas primero!";
+                        status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-yellow-100 text-yellow-700";
+                        return;
+                    }
+
+                    // 2. CALCULAR PUNTOS (Ejemplo: 10 puntos por lata)
+                    const ecoPuntos = latasDetectadas * 10;
+
+                    // 3. GUARDAR EN LA COLECCIÓN DE RECICLAJE
+                    await addDoc(collection(db, "reciclaje"), {
+                        rut: rutInput,
+                        latas: latasDetectadas,
+                        puntos: ecoPuntos,
+                        fecha: serverTimestamp()
+                    });
+
+                    // 4. RESETEAR EL CONTADOR DE LA MÁQUINA A 0
+                    await updateDoc(machRef, { latas_pendientes: 0 });
+
+                    status.textContent = `¡Éxito! Registraste ${latasDetectadas} latas y ganaste ${ecoPuntos} puntos.`;
+                    status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-green-100 text-green-700";
+                    document.getElementById('rut').value = "";
+                }
             } catch (e) {
-                console.error("Error: ", e);
-                status.textContent = "Error de conexión. Verifica Firestore.";
+                console.error(e);
+                status.textContent = "Error al conectar con la base de datos.";
                 status.className = "mt-6 p-4 rounded-lg text-center font-medium bg-red-100 text-red-700";
             }
         };
     </script>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-green-600">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-green-600 uppercase tracking-wider">Eco-Press</h1>
-            <p class="text-gray-500 mt-2">UCN - Proyecto de Reciclaje</p>
+            <h1 class="text-3xl font-bold text-green-700 uppercase">Eco-Press UCN</h1>
+            <p class="text-gray-500 text-sm">Canjea tus latas por Eco-Puntos</p>
         </div>
+
         <form onsubmit="event.preventDefault(); registrarDatos();" class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700">RUT del Usuario</label>
@@ -62,7 +85,7 @@
                     class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 text-lg">
             </div>
             <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg uppercase transition">
-                Registrar Latas
+                Reclamar mis Puntos
             </button>
         </form>
         <div id="statusMessage" class="hidden mt-6 p-4 rounded-lg text-center font-medium"></div>
